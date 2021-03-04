@@ -1,0 +1,7 @@
+datasets
+*/__pycache__/*
+data
+5
+**/__pycache__/**
+.vscode
+hidden
