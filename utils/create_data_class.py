@@ -67,7 +67,7 @@ def draw_segment(img: np.ndarray, contour: np.ndarray) -> None:
 def crop_contour(img: np.ndarray, contour: np.ndarray) -> np.ndarray:
     height, width, channel = img.shape
     x, y, w, h = cv2.boundingRect(contour)
-    pad = 0
+    pad = 10
     crop = img[max(y - pad, 0) : min(y + h + pad, height), max(x - pad, 0) : min(x + w + pad, width)]
     # crop = resize_pad(crop, 96)
     return crop

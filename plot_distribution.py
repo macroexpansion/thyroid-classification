@@ -15,15 +15,15 @@ def distribution_data():
     dataloader = DataLoader(all_data, batch_size=1, sampler=sampler)
     data = {}
     for img, label in dataloader:
-        _, w, h = img.squeeze().size()
+        _, h, w = img.squeeze().size()
         label = label.numpy()[0]
         if label not in data.keys():
             data[label] = []
-        data[label].append([w, h])
+        data[label].append([h, w])
 
     for key in data.keys():
         data[key] = np.array(data[key])
-        print(f"max (w, h) {lb[key]}: ({np.max(data[key][:, 0])}, {np.max(data[key][:, 1])}) ")
+        print(f"max (h, w) {lb[key]}: ({np.max(data[key][:, 0])}, {np.max(data[key][:, 1])}) ")
         # print(f"max h {lb[key]}: ")
     scatter_plot(data)
 
@@ -33,9 +33,9 @@ def scatter_plot(data):
     colors = ["blue", "orange", "green", "red"]
     fig, ax = plt.subplots()
     for key in data.keys():
-        w = data[key][:, 0]
-        h = data[key][:, 1]
-        ax.scatter(w, h, c=colors[key], label=lb[key], alpha=0.3, edgecolors="none")
+        h = data[key][:, 0]
+        w = data[key][:, 1]
+        ax.scatter(h, w, c=colors[key], label=lb[key], alpha=0.3, edgecolors="none")
 
     ax.legend()
     ax.grid(True)
