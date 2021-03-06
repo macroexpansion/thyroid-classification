@@ -32,7 +32,7 @@ def split_data(dataset, data="train", test_split_size=0.2, valid_split_size=0.2,
         train_indices, y_train, test_size=valid_split_size, random_state=seed
     )
 
-    # print(f"train: {np.bincount(y_train)}, valid: {np.bincount(y_valid)}, test: {np.bincount(y_test)}")
+    print(f"train: {np.bincount(y_train)}, valid: {np.bincount(y_valid)}, test: {np.bincount(y_test)}")
 
     train_sampler = SubsetRandomSampler(train_indices)
     valid_sampler = SubsetRandomSampler(valid_indices)
@@ -44,8 +44,11 @@ def dataloader(data="train", batch_size=16, transform=transforms.ToTensor(), see
     path = "data"
 
     all_data = ImageFolder(root=path, transform=transform)
-    # calc_norm(all_data)
     samplers = split_data(all_data, data=data, seed=seed)
-    dataloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers[data], pin_memory=True, num_workers=2)
-
-    return dataloader
+    if data == "test":
+        testloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers[data], pin_memory=True, num_workers=2)
+        return {"test": testloader}
+    else:
+        trainloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers["train"], pin_memory=True, num_workers=2)
+        validloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers["valid"], pin_memory=True, num_workers=2)
+        return {"train": trainloader, "valid": validloader}
