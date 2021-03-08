@@ -5,11 +5,13 @@ import torch
 import os
 import time
 
-from utils import set_seed, EarlyStopping
-from dataloader import dataloader, FixedSizePadding
 from torchvision import transforms
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
+
+from utils import set_seed, EarlyStopping
+from dataloader import dataloader, FixedSizePadding
+from logs import log_writer
 
 
 preprocess = {
@@ -25,10 +27,11 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
         print("Using CUDA")
         model.cuda()
 
-    es = EarlyStopping(mode="max", patience=3)
+    es = EarlyStopping(mode="max", patience=15)
     since = time.time()
 
     best_acc = 0.0
+    rows = {"train": [], "valid": []}
 
     scaler = GradScaler()
     for epoch in range(1, num_epochs):
@@ -62,7 +65,6 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
 
                     if phase == "train":
                         scaler.scale(loss).backward()
-                        # optimizer.step()
                         scaler.step(optimizer)
                         scaler.update()
                         optimizer.zero_grad()
@@ -76,6 +78,9 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
             epoch_loss = running_loss / data_size[phase]
             epoch_acc = running_corrects / data_size[phase]
 
+            rows[phase].append([epoch_loss, epoch_acc.item()])
+            log_writer(headers=["loss", "accuracy"], rows=rows[phase], foldername=model_name, filename=f"{phase}.csv")
+
             print(f"\t--> Loss: {epoch_loss}")
             print(f"\t--> Accuracy: {epoch_acc}")
 
@@ -85,14 +90,15 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
             torch.save(model.state_dict(), f"weights/{model_name}/last-{model_name}.pt")
 
             # logging
-            if phase == "valid":
-                # if es.step(epoch_acc.cpu()):
-                #     time_elapsed = time.time() - since
-                #     print("Early Stopping")
-                #     print("Training complete in {:.0f}m {:.0f}s".format(time_elapsed // 60, time_elapsed % 60))
-                #     print("Best val Acc: {:4f}".format(best_acc))
-                #     return
+            if phase == "train":
+                if es.step(epoch_acc.cpu()):
+                    time_elapsed = time.time() - since
+                    print("Early Stopping")
+                    print("Training complete in {:.0f}m {:.0f}s".format(time_elapsed // 60, time_elapsed % 60))
+                    print("Best val Acc: {:4f}".format(best_acc))
+                    return
 
+            if phase == "valid":
                 if epoch_acc > best_acc:
                     best_acc = epoch_acc
                     print("Update best acc: {:4f}".format(best_acc))
