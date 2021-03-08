@@ -9,10 +9,11 @@ import torch.optim as optim
 
 def train_resnet():
     set_seed(0)
-    net = ResNet50(pretrained=False)
+    net = ResNet50(pretrained=False, load_weight=None)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=5e-4)
-    train(model=net, loss_fn=criterion, optimizer=optimizer, num_epochs=1000, batch_size=16, seed=3, model_name="resnet50")
+    optimizer.zero_grad()
+    train(model=net, loss_fn=criterion, optimizer=optimizer, num_epochs=1000, batch_size=128, seed=3, model_name="resnet50")
 
 
 if __name__ == "__main__":

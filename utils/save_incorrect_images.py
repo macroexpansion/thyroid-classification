@@ -8,7 +8,7 @@ from skimage import io
 
 def save_incorrect_images(images: torch.Tensor, labels: torch.Tensor, preds: torch.Tensor, indices: torch.Tensor):
     class_labels = ["2", "3", "4"]
-    images = (images.permute(0, 2, 3, 1).numpy() * 255).astype(np.uint8)
+    images = (images.permute(0, 2, 3, 1).cpu().numpy() * 255).astype(np.uint8)
 
     for idx in range(images.shape[0]):
         foldername = str(class_labels[labels[idx]])

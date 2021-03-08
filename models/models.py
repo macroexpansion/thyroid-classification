@@ -13,9 +13,9 @@ def ResNet50(pretrained=False, mode="eval", load_weight=None):
     net.fc = nn.Linear(in_features=2048, out_features=3)
 
     if load_weight == "best":
-        net.load_state_dict(torch.load("trained/best-resnet50.pt", map_location=torch.device(device)))
+        net.load_state_dict(torch.load("weights/resnet50/best-resnet50.pt", map_location=torch.device(device)))
     elif load_weight == "last":
-        net.load_state_dict(torch.load("trained/last-resnet50.pt", map_location=torch.device(device)))
+        net.load_state_dict(torch.load("weights/resnet50/last-resnet50.pt", map_location=torch.device(device)))
 
     if mode == "eval":
         net.eval()

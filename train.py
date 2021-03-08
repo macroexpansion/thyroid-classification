@@ -9,6 +9,7 @@ from utils import set_seed, EarlyStopping
 from dataloader import dataloader, FixedSizePadding
 from torchvision import transforms
 from tqdm import tqdm
+from torch.cuda.amp import autocast, GradScaler
 
 
 preprocess = {
@@ -29,6 +30,7 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
 
     best_acc = 0.0
 
+    scaler = GradScaler()
     for epoch in range(1, num_epochs):
         start = time.time()
         print("-" * 10)
@@ -52,15 +54,18 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
                 images = images.to(device)
                 labels = labels.to(device)
 
-                optimizer.zero_grad()
                 with torch.set_grad_enabled(phase == "train"):
-                    outputs = model(images)
-                    _, preds = torch.max(outputs, 1)
-                    loss = loss_fn(outputs, labels)
+                    with autocast():
+                        outputs = model(images)
+                        _, preds = torch.max(outputs, 1)
+                        loss = loss_fn(outputs, labels)
 
                     if phase == "train":
-                        loss.backward()
-                        optimizer.step()
+                        scaler.scale(loss).backward()
+                        # optimizer.step()
+                        scaler.step(optimizer)
+                        scaler.update()
+                        optimizer.zero_grad()
 
                 running_loss += loss.item() * images.size(0)
                 running_corrects += torch.sum(preds == labels.data)
@@ -81,12 +86,12 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
 
             # logging
             if phase == "valid":
-                if es.step(epoch_acc.cpu()):
-                    time_elapsed = time.time() - since
-                    print("Early Stopping")
-                    print("Training complete in {:.0f}m {:.0f}s".format(time_elapsed // 60, time_elapsed % 60))
-                    print("Best val Acc: {:4f}".format(best_acc))
-                    return
+                # if es.step(epoch_acc.cpu()):
+                #     time_elapsed = time.time() - since
+                #     print("Early Stopping")
+                #     print("Training complete in {:.0f}m {:.0f}s".format(time_elapsed // 60, time_elapsed % 60))
+                #     print("Best val Acc: {:4f}".format(best_acc))
+                #     return
 
                 if epoch_acc > best_acc:
                     best_acc = epoch_acc
