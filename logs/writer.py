@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Any
 
 import csv
 import os
 
 
-def log_writer(headers: List[str], rows: List[List[int]], foldername: str = "log", filename: str = "log.csv"):
+def log_writer(headers: List[str], rows: List[List[Any]], foldername: str = "log", filename: str = "log.csv"):
     if not os.path.exists(os.path.join("logs", foldername)):
         os.mkdir(os.path.join("logs", foldername))
 

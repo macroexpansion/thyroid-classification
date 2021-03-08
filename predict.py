@@ -1,10 +1,9 @@
-import torch.nn.functional as F
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from skimage import io
-from torchvision import models
-from torchvision import transforms
+from torchvision import models, transforms
 
 
 def ResNet50(pretrained=False, mode="eval"):
@@ -57,6 +56,7 @@ def inference(model, image):
 
 
 if __name__ == "__main__":
+    targets = ["2", "3", "4"]
     transforms = transforms.Compose([transforms.ToTensor(), FixedSizePadding(), lambda x: x.unsqueeze(0)])
 
     image = io.imread("data/2/chuongthichin1960_20190116_Small-_Part_0001_2_0.jpg")
@@ -65,4 +65,4 @@ if __name__ == "__main__":
     net = ResNet50()
 
     prediction = inference(net, image)
-    print(prediction)
+    print(targets[prediction])

@@ -12,7 +12,7 @@ def train_resnet():
     net = ResNet50(pretrained=False)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=5e-4)
-    train(model=net, loss=criterion, optimizer=optimizer, num_epochs=1000, batch_size=10, seed=3, model_name="resnet50")
+    train(model=net, loss_fn=criterion, optimizer=optimizer, num_epochs=1000, batch_size=16, seed=3, model_name="resnet50")
 
 
 if __name__ == "__main__":

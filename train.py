@@ -17,7 +17,7 @@ preprocess = {
 }
 
 
-def train(model, loss, optimizer, num_epochs=500, batch_size=16, seed=3, model_name="resnet50"):
+def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, model_name="resnet50"):
     use_gpu = torch.cuda.is_available()
     device = "cuda:0" if use_gpu else "cpu"
     if use_gpu:
@@ -35,7 +35,9 @@ def train(model, loss, optimizer, num_epochs=500, batch_size=16, seed=3, model_n
         print("Epoch {}/{}".format(epoch, num_epochs))
 
         # training and validateing
-        data_loader = dataloader(batch_size=batch_size, transform=preprocess["train"], seed=seed)
+        dataset, data_loader, data_size = dataloader(
+            data="train", batch_size=batch_size, transform=preprocess["train"], seed=seed
+        )
         for phase in ["train", "valid"]:
             print(phase)
             if phase == "train":
@@ -46,7 +48,7 @@ def train(model, loss, optimizer, num_epochs=500, batch_size=16, seed=3, model_n
             running_loss = 0.0
             running_corrects = 0.0
 
-            for images, labels in tqdm(data_loader[phase]):
+            for images, labels, _ in tqdm(data_loader[phase]):
                 images = images.to(device)
                 labels = labels.to(device)
 
@@ -54,21 +56,20 @@ def train(model, loss, optimizer, num_epochs=500, batch_size=16, seed=3, model_n
                 with torch.set_grad_enabled(phase == "train"):
                     outputs = model(images)
                     _, preds = torch.max(outputs, 1)
-                    loss_ = loss(outputs, labels)
+                    loss = loss_fn(outputs, labels)
 
                     if phase == "train":
-                        loss_.backward()
+                        loss.backward()
                         optimizer.step()
 
-                running_loss += loss_.item() * images.size(0)
+                running_loss += loss.item() * images.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
                 del images, labels, outputs, preds
                 torch.cuda.empty_cache()
 
-            data_size = batch_size  # len(data_loader)
-            epoch_loss = running_loss / data_size
-            epoch_acc = running_corrects / data_size
+            epoch_loss = running_loss / data_size[phase]
+            epoch_acc = running_corrects / data_size[phase]
 
             print(f"\t--> Loss: {epoch_loss}")
             print(f"\t--> Accuracy: {epoch_acc}")
