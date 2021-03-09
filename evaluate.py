@@ -29,7 +29,7 @@ def logging():
     #     model_pred, model_label = all_predictions[wrong_idx[idx]], all_labels[wrong_idx[idx]]
     #     rows.append([image_label, model_pred.item(), model_label.item(), image_path])
     # log_writer(
-    #     headers="image_label model_pred model_label image_path".split(), rows=rows, foldername="labels", filename="wrong.csv"
+    #     header="image_label model_pred model_label image_path".split(), rows=rows, folder_name="labels", file_name="wrong.csv"
     # )
     pass
 

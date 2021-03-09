@@ -79,7 +79,7 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
             epoch_acc = running_corrects / data_size[phase]
 
             rows[phase].append([epoch_loss, epoch_acc.item()])
-            log_writer(headers=["loss", "accuracy"], rows=rows[phase], foldername=model_name, filename=f"{phase}.csv")
+            log_writer(header=["loss", "accuracy"], rows=rows[phase], folder_name=model_name, file_name=f"{phase}.csv")
 
             print(f"\t--> Loss: {epoch_loss}")
             print(f"\t--> Accuracy: {epoch_acc}")

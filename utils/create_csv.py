@@ -31,8 +31,8 @@ def create_csv() -> None:
                 else:
                     fna = 2
 
-                for filename in files:
-                    a = [filename, root, fna, tirad]
+                for file_name in files:
+                    a = [file_name, root, fna, tirad]
                     print(a)
                     pat_writer.writerow(a)
 
