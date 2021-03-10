@@ -16,15 +16,4 @@ def log_writer(header: List[str], rows: List[List[Any]], folder_name: str = "log
 
 
 if __name__ == "__main__":
-    log_writer(
-        ["a", "f", "r", "d"],
-        [
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-        ],
-    )
+    pass

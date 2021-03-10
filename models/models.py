@@ -5,7 +5,7 @@ from torchvision import models
 
 
 def ResNet50(pretrained=False, mode="eval", load_weight=None):
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    device = "cuda:1" if torch.cuda.is_available() else "cpu"
     if pretrained and load_weight:
         raise Exception("load_weight must be None when pretrained is True")
 

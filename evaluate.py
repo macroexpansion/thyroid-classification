@@ -12,6 +12,10 @@ from logs import log_writer
 from sklearn.metrics import classification_report
 from torch.cuda.amp import autocast
 
+
+use_gpu = torch.cuda.is_available()
+device = "cuda:1" if use_gpu else "cpu"
+
 preprocess = {
     "train": transforms.Compose([transforms.ToTensor(), FixedSizePadding()]),
     "valid": transforms.Compose([transforms.ToTensor(), FixedSizePadding()]),
@@ -19,31 +23,14 @@ preprocess = {
 }
 
 
-def logging():
-    # diff = all_predictions == all_labels
-    # wrong_idx = torch.where(diff == False)[0]
-    # rows = []
-    # for idx in range(wrong_idx.size(0)):
-    #     image_idx = all_indices[wrong_idx[idx]]
-    #     image_path, image_label = dataset.imgs[image_idx]
-    #     model_pred, model_label = all_predictions[wrong_idx[idx]], all_labels[wrong_idx[idx]]
-    #     rows.append([image_label, model_pred.item(), model_label.item(), image_path])
-    # log_writer(
-    #     header="image_label model_pred model_label image_path".split(), rows=rows, folder_name="labels", file_name="wrong.csv"
-    # )
-    pass
-
-
 def evaluate(model, batch_size=16, seed=3, data="train"):
     model.eval()
     for param in model.parameters():
         param.grad = None
 
-    use_gpu = torch.cuda.is_available()
-    device = "cuda:0" if use_gpu else "cpu"
     if use_gpu:
         print("Using CUDA")
-        model.cuda()
+        model.to(device)
 
     with torch.no_grad():
         since = time.time()

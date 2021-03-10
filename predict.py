@@ -6,6 +6,10 @@ from skimage import io
 from torchvision import models, transforms
 
 
+use_gpu = torch.cuda.is_available()
+device = "cuda:1" if use_gpu else "cpu"
+
+
 def ResNet50(pretrained=False, mode="eval"):
     net = models.resnet50(pretrained=pretrained)
     net.fc = nn.Linear(in_features=2048, out_features=3)
@@ -42,11 +46,10 @@ class FixedSizePadding:
 
 
 def inference(model, image):
-    use_gpu = torch.cuda.is_available()
-    device = "cuda:0" if use_gpu else "cpu"
+
     if use_gpu:
         print("Using CUDA")
-        model.cuda()
+        model.to(device)
 
     with torch.no_grad():
         image = image.to(device)

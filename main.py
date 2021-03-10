@@ -10,10 +10,23 @@ import torch.optim as optim
 def train_resnet():
     set_seed(0)
     net = ResNet50(pretrained=False, load_weight=None)
+
     criterion = nn.CrossEntropyLoss()
+
     optimizer = optim.Adam(net.parameters(), lr=5e-4)
-    optimizer.zero_grad()
-    train(model=net, loss_fn=criterion, optimizer=optimizer, num_epochs=1000, batch_size=128, seed=3, model_name="resnet50")
+
+    lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.3, verbose=True)
+
+    train(
+        model=net,
+        loss_fn=criterion,
+        optimizer=optimizer,
+        lr_scheduler=lr_scheduler,
+        num_epochs=1000,
+        batch_size=128,
+        seed=3,
+        model_name="resnet50_2",
+    )
 
 
 if __name__ == "__main__":

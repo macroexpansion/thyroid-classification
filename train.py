@@ -9,10 +9,16 @@ from torchvision import transforms
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 
+
 from utils import set_seed, EarlyStopping
 from dataloader import dataloader, FixedSizePadding
 from logs import log_writer
 
+
+torch.backends.cudnn.benchmarks = True
+
+use_gpu = torch.cuda.is_available()
+device = "cuda:1" if use_gpu else "cpu"
 
 preprocess = {
     "train": transforms.Compose([transforms.ToTensor(), FixedSizePadding()]),
@@ -20,14 +26,21 @@ preprocess = {
 }
 
 
-def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, model_name="resnet50"):
-    use_gpu = torch.cuda.is_available()
-    device = "cuda:0" if use_gpu else "cpu"
+def train(
+    model,
+    loss_fn,
+    optimizer,
+    lr_scheduler=None,
+    num_epochs: int = 500,
+    batch_size: int = 16,
+    seed: int = 3,
+    model_name: str = "resnet50",
+):
     if use_gpu:
         print("Using CUDA")
-        model.cuda()
+        model.to(device)
 
-    es = EarlyStopping(mode="max", patience=15)
+    es = EarlyStopping(mode="max", patience=20)
     since = time.time()
 
     best_acc = 0.0
@@ -81,16 +94,13 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
             rows[phase].append([epoch_loss, epoch_acc.item()])
             log_writer(header=["loss", "accuracy"], rows=rows[phase], folder_name=model_name, file_name=f"{phase}.csv")
 
-            print(f"\t--> Loss: {epoch_loss}")
-            print(f"\t--> Accuracy: {epoch_acc}")
-
-            # save last weight
-            if not os.path.exists(f"weights/{model_name}"):
-                os.makedirs(f"weights/{model_name}")
-            torch.save(model.state_dict(), f"weights/{model_name}/last-{model_name}.pt")
-
-            # logging
             if phase == "train":
+                # save last weight
+                if not os.path.exists(f"weights/{model_name}"):
+                    os.makedirs(f"weights/{model_name}")
+                torch.save(model.state_dict(), f"weights/{model_name}/last-{model_name}.pt")
+
+                # early stopping
                 if es.step(epoch_acc.cpu()):
                     time_elapsed = time.time() - since
                     print("Early Stopping")
@@ -99,10 +109,18 @@ def train(model, loss_fn, optimizer, num_epochs=500, batch_size=16, seed=3, mode
                     return
 
             if phase == "valid":
+                # learning rate scheduler
+                if lr_scheduler:
+                    lr_scheduler.step(epoch_loss)
+
+                # save best weight
                 if epoch_acc > best_acc:
                     best_acc = epoch_acc
                     print("Update best acc: {:4f}".format(best_acc))
                     torch.save(model.state_dict(), f"weights/{model_name}/best-{model_name}.pt")
+
+            print(f"\t--> Loss: {epoch_loss}")
+            print(f"\t--> Accuracy: {epoch_acc}")
 
     time_elapsed = time.time() - since
     print("Training complete in {:.0f}m {:.0f}s".format(time_elapsed // 60, time_elapsed % 60))
