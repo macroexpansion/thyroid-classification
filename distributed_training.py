@@ -6,6 +6,7 @@ import argparse
 
 from torch.nn.parallel import DistributedDataParallel as DDP
 
+parser = argparse.ArgumentParser()
 parser.add_argument("--local_rank", type=int)
 
 
@@ -31,12 +32,12 @@ def example(rank, world_size):
 
 
 def main():
-    # parser = argparse.ArgumentParser()
-    # args = parser.parse_args()
+    args = parser.parse_args()
+    print(args.local_rank)
     # torch.cuda.set_device(args.local_rank)
 
     world_size = 2
-    mp.spawn(example, args=(world_size,), nprocs=world_size, join=True)
+    # mp.spawn(example, args=(world_size,), nprocs=world_size, join=True)
 
 
 if __name__ == "__main__":
