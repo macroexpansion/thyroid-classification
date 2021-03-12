@@ -59,3 +59,47 @@ def dataloader(data="train", batch_size=16, transform=transforms.ToTensor(), see
                 "valid": samplers["valid_size"],
             },
         )
+
+
+def distributed_split_data(
+    rank, world_size, dataset, data="train", test_split_size=0.2, valid_split_size=0.2, seed=1, random_sample=True
+):
+    set_seed(seed)
+    X_indices = np.array([idx for idx, data in enumerate(dataset.imgs)])
+    y = np.array([data[1] for data in dataset.imgs])
+    train_indices, test_indices, y_train, y_test = train_test_split(X_indices, y, test_size=test_split_size, random_state=seed)
+
+    if data == "test":
+        test_sampler = torch.utils.data.distributed.DistributedSampler(test_indices, num_replicas=world_size, rank=rank)
+        return {"test": test_sampler, "test_size": len(test_indices)}
+
+    train_indices, valid_indices, y_train, y_valid = train_test_split(
+        train_indices, y_train, test_size=valid_split_size, random_state=seed
+    )
+
+    # print(f"train: {np.bincount(y_train)}, valid: {np.bincount(y_valid)}, test: {np.bincount(y_test)}")
+
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_indices, num_replicas=world_size, rank=rank)
+    valid_sampler = torch.utils.data.distributed.DistributedSampler(valid_indices, num_replicas=world_size, rank=rank)
+
+    return {"train": train_sampler, "train_size": len(train_indices), "valid": valid_sampler, "valid_size": len(valid_indices)}
+
+
+def distributed_dataloader(rank, world_size, data="train", batch_size=16, transform=transforms.ToTensor(), seed=1):
+    path = "data"
+    all_data = IndexedImageFolder(root=path, transform=transform)
+    samplers = distributed_split_data(rank, world_size, all_data)
+    if data == "test":
+        testloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers[data], pin_memory=True, num_workers=2)
+        return all_data, {"test": testloader}, {"test": samplers["test_size"]}
+    else:
+        trainloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers["train"], pin_memory=True, num_workers=2)
+        validloader = DataLoader(all_data, batch_size=batch_size, sampler=samplers["valid"], pin_memory=True, num_workers=2)
+        return (
+            all_data,
+            {"train": trainloader, "valid": validloader},
+            {
+                "train": samplers["train_size"],
+                "valid": samplers["valid_size"],
+            },
+        )

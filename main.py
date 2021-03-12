@@ -1,5 +1,7 @@
 from utils import set_seed
 from train import train
+
+# from distributed_training import distributed_train
 from models import ResNet50
 
 import torch
@@ -8,7 +10,6 @@ import torch.optim as optim
 
 
 def train_resnet():
-    set_seed(0)
     net = ResNet50(pretrained=False, load_weight=None)
 
     criterion = nn.CrossEntropyLoss()
@@ -17,17 +18,18 @@ def train_resnet():
 
     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.3, verbose=True)
 
-    train(
-        model=net,
-        loss_fn=criterion,
-        optimizer=optimizer,
-        lr_scheduler=lr_scheduler,
-        num_epochs=1000,
-        batch_size=128,
-        seed=3,
-        model_name="resnet50_2",
-    )
+    # train(
+    #     model=net,
+    #     loss_fn=criterion,
+    #     optimizer=optimizer,
+    #     lr_scheduler=lr_scheduler,
+    #     num_epochs=1000,
+    #     batch_size=128,
+    #     seed=3,
+    #     model_name="resnet50_2",
+    # )
 
 
 if __name__ == "__main__":
     train_resnet()
+    # distributed_train_resnet()
